@@ -9,6 +9,7 @@
 
 #define PORT 587
 #define BUFF_SIZE 4096
+#define MAIL_SIZE 128
 
 void send_smtp_cmd(int sock_fd, const char *cmd, char *buffer)
 {
@@ -161,11 +162,17 @@ int main()
     // application password
     send_smtp_ssl_cmd(ssl, "base64_application_password\r\n", buffer);
 
-    const *from_email = "example@gmail.com";
-    const *to_email = "example2@gmail.com";
+    char *from_email = "example@gmail.com";
+    char *to_email = "example2@gmail.com";
 
-    send_smtp_ssl_cmd(ssl, "MAIL FROM:<example@gmail.com>\r\n", buffer);
-    send_smtp_ssl_cmd(ssl, "RCPT TO:<example2@gmail.com>\r\n", buffer);
+    char mail[MAIL_SIZE];
+    char rcpt[MAIL_SIZE];
+
+    snprintf(mail, MAIL_SIZE, "MAIL FROM:<%s>\r\n", from_email);
+    snprintf(rcpt, MAIL_SIZE, "RCPT TO:<%s>\r\n", to_email);
+
+    send_smtp_ssl_cmd(ssl, mail, buffer);
+    send_smtp_ssl_cmd(ssl, rcpt, buffer);
     send_smtp_ssl_cmd(ssl, "DATA\r\n", buffer);
 
     // email message
