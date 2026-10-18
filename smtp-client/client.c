@@ -7,9 +7,36 @@
 #include <openssl/err.h>
 #include <arpa/inet.h>
 
+#include <openssl/sha.h>
+#include <openssl/hmac.h>
+#include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+
 #define PORT 587
 #define BUFF_SIZE 4096
 #define MAIL_SIZE 128
+
+char *base64(const unsigned char *input, int length)
+{
+    BIO *bmem, *b64;
+    BUF_MEM *bptr;
+
+    b64 = BIO_new(BIO_f_base64());
+    bmem = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bmem);
+    BIO_write(b64, input, length);
+    BIO_flush(b64);
+    BIO_get_mem_ptr(b64, &bptr);
+
+    char *buff = (char *)malloc(bptr->length);
+    memcpy(buff, bptr->data, bptr->length - 1);
+    buff[bptr->length - 1] = 0;
+
+    BIO_free_all(b64);
+
+    return buff;
+}
 
 void send_smtp_cmd(int sock_fd, const char *cmd, char *buffer)
 {
@@ -154,16 +181,21 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    char *from_email = "example@gmail.com";
+    char *to_email = "example2@gmail.com";
+
+    char *output = base64((const unsigned char *)from_email, strlen(from_email));
+
+    char base64_email[256];
+    snprintf(base64_email, 256, "%s\r\n", output);
+
     send_smtp_ssl_cmd(ssl, "EHLO Nour\r\n", buffer);
     // loginin user
     send_smtp_ssl_cmd(ssl, "AUTH LOGIN\r\n", buffer);
     // gmail
-    send_smtp_ssl_cmd(ssl, "base64_gmail\r\n", buffer);
+    send_smtp_ssl_cmd(ssl, base64_email, buffer);
     // application password
     send_smtp_ssl_cmd(ssl, "base64_application_password\r\n", buffer);
-
-    char *from_email = "example@gmail.com";
-    char *to_email = "example2@gmail.com";
 
     char mail[MAIL_SIZE];
     char rcpt[MAIL_SIZE];
