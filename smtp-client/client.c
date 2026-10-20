@@ -181,8 +181,8 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    char *from_email = "example@gmail.com";
-    char *to_email = "example2@gmail.com";
+    char *from_email = "from_example@gmail.com";
+    char *to_email = "to_example@gmail.com";
 
     char *output = base64((const unsigned char *)from_email, strlen(from_email));
 
@@ -213,7 +213,7 @@ int main()
              "From: %s\r\n"
              "To: %s\r\n"
              "\r\n"
-             "This message has been sent using smtp in c"
+             "This message has been sent using smtp in c\r\n"
              ".\r\n",
              from_email, to_email);
 
